@@ -9,7 +9,150 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      issues: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          estimated_cost: number | null
+          id: string
+          images: string[] | null
+          location: string
+          priority: string | null
+          reported_by: string
+          skills_required: string | null
+          status: string | null
+          title: string
+          updated_at: string
+          volunteers_needed: number | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          estimated_cost?: number | null
+          id?: string
+          images?: string[] | null
+          location: string
+          priority?: string | null
+          reported_by: string
+          skills_required?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string
+          volunteers_needed?: number | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          estimated_cost?: number | null
+          id?: string
+          images?: string[] | null
+          location?: string
+          priority?: string | null
+          reported_by?: string
+          skills_required?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string
+          volunteers_needed?: number | null
+        }
+        Relationships: []
+      }
+      volunteer_assignments: {
+        Row: {
+          assigned_at: string
+          completed_at: string | null
+          id: string
+          issue_id: string | null
+          notes: string | null
+          progress_percentage: number | null
+          status: string | null
+          volunteer_id: string | null
+        }
+        Insert: {
+          assigned_at?: string
+          completed_at?: string | null
+          id?: string
+          issue_id?: string | null
+          notes?: string | null
+          progress_percentage?: number | null
+          status?: string | null
+          volunteer_id?: string | null
+        }
+        Update: {
+          assigned_at?: string
+          completed_at?: string | null
+          id?: string
+          issue_id?: string | null
+          notes?: string | null
+          progress_percentage?: number | null
+          status?: string | null
+          volunteer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "volunteer_assignments_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "issues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "volunteer_assignments_volunteer_id_fkey"
+            columns: ["volunteer_id"]
+            isOneToOne: false
+            referencedRelation: "volunteers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      volunteers: {
+        Row: {
+          availability: string | null
+          created_at: string
+          email: string
+          experience: string | null
+          full_name: string
+          id: string
+          location: string
+          motivation: string
+          phone: string
+          skills: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          availability?: string | null
+          created_at?: string
+          email: string
+          experience?: string | null
+          full_name: string
+          id?: string
+          location: string
+          motivation: string
+          phone: string
+          skills: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          availability?: string | null
+          created_at?: string
+          email?: string
+          experience?: string | null
+          full_name?: string
+          id?: string
+          location?: string
+          motivation?: string
+          phone?: string
+          skills?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

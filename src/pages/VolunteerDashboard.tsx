@@ -3,68 +3,18 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { MapPin, Users, CheckCircle, Clock, AlertCircle, Eye } from 'lucide-react';
+import { MapPin, Users, CheckCircle, Clock, AlertCircle, Eye, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useIssuesByStatus } from '@/hooks/useIssues';
+import { useVolunteers } from '@/hooks/useVolunteers';
 import IssueCard from '../components/IssueCard';
 
 const VolunteerDashboard = () => {
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const { data: issues, isLoading: issuesLoading } = useIssuesByStatus(selectedFilter);
+  const { data: volunteers } = useVolunteers();
 
-  const allIssues = [
-    {
-      id: '1',
-      title: 'Damaged road near school',
-      category: 'Roads',
-      description: 'The main road connecting our village to the school has several large potholes making it dangerous for children to walk to school.',
-      location: 'Rampur Village, Main Road',
-      status: 'open' as const,
-      reportedBy: 'Rajesh Kumar',
-      reportedDate: '2 days ago',
-      priority: 'High',
-      volunteersNeeded: 3,
-      skillsRequired: 'Civil Engineering, Labor'
-    },
-    {
-      id: '2',
-      title: 'Irregular electricity supply',
-      category: 'Electricity',
-      description: 'Power outages lasting 8-10 hours daily affecting local businesses and household activities.',
-      location: 'Sundarpur Village',
-      status: 'in-progress' as const,
-      reportedBy: 'Priya Sharma',
-      reportedDate: '5 days ago',
-      priority: 'Medium',
-      volunteersNeeded: 2,
-      skillsRequired: 'Electrical Engineering'
-    },
-    {
-      id: '3',
-      title: 'Water pump maintenance needed',
-      category: 'Water',
-      description: 'Community water pump requires immediate maintenance to ensure clean water supply to 50+ families.',
-      location: 'Madhavpur Village',
-      status: 'open' as const,
-      reportedBy: 'Village Committee',
-      reportedDate: '1 day ago',
-      priority: 'High',
-      volunteersNeeded: 2,
-      skillsRequired: 'Plumbing, Mechanical'
-    },
-    {
-      id: '4',
-      title: 'Solar street lights installation',
-      category: 'Electricity',
-      description: 'Need installation of solar street lights in the main market area for better safety.',
-      location: 'Nandgaon Village',
-      status: 'open' as const,
-      reportedBy: 'Local Youth Committee',
-      reportedDate: '3 days ago',
-      priority: 'Medium',
-      volunteersNeeded: 4,
-      skillsRequired: 'Electrical work, Solar installation'
-    }
-  ];
-
+  // Mock data for assignments since we haven't implemented volunteer assignments yet
   const myAssignments = [
     {
       id: '2',
@@ -78,15 +28,25 @@ const VolunteerDashboard = () => {
   ];
 
   const stats = [
-    { label: 'Available Issues', value: '12', icon: AlertCircle, color: 'text-orange-600' },
+    { label: 'Available Issues', value: issues?.filter(issue => issue.status === 'open').length.toString() || '0', icon: AlertCircle, color: 'text-orange-600' },
     { label: 'My Active Projects', value: '1', icon: Clock, color: 'text-blue-600' },
     { label: 'Completed Projects', value: '3', icon: CheckCircle, color: 'text-green-600' },
-    { label: 'Impact Score', value: '85', icon: Users, color: 'text-purple-600' }
+    { label: 'Registered Volunteers', value: volunteers?.length.toString() || '0', icon: Users, color: 'text-purple-600' }
   ];
 
-  const filteredIssues = selectedFilter === 'all' 
-    ? allIssues 
-    : allIssues.filter(issue => issue.status === selectedFilter);
+  const transformIssueForCard = (issue: any) => ({
+    id: issue.id,
+    title: issue.title,
+    category: issue.category,
+    description: issue.description,
+    location: issue.location,
+    status: issue.status as 'open' | 'in-progress' | 'resolved',
+    reportedBy: issue.reported_by,
+    reportedDate: new Date(issue.created_at).toLocaleDateString(),
+    priority: issue.priority,
+    volunteersNeeded: issue.volunteers_needed,
+    skillsRequired: issue.skills_required
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -228,33 +188,42 @@ const VolunteerDashboard = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {filteredIssues.map((issue) => (
-                <div key={issue.id} className="relative">
-                  <IssueCard {...issue} />
-                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-medium text-gray-700">
-                        Volunteers needed: {issue.volunteersNeeded}
-                      </span>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        issue.priority === 'High' ? 'bg-red-100 text-red-800' :
-                        issue.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-green-100 text-green-800'
-                      }`}>
-                        {issue.priority} Priority
-                      </span>
+            {issuesLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+                <span className="ml-2 text-gray-600">Loading issues...</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {issues?.map((issue) => (
+                  <div key={issue.id} className="relative">
+                    <IssueCard {...transformIssueForCard(issue)} />
+                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium text-gray-700">
+                          Volunteers needed: {issue.volunteers_needed}
+                        </span>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          issue.priority === 'high' || issue.priority === 'critical' ? 'bg-red-100 text-red-800' :
+                          issue.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-green-100 text-green-800'
+                        }`}>
+                          {issue.priority} Priority
+                        </span>
+                      </div>
+                      {issue.skills_required && (
+                        <p className="text-sm text-gray-600 mb-3">
+                          Skills required: {issue.skills_required}
+                        </p>
+                      )}
+                      <Button size="sm" className="w-full bg-green-600 hover:bg-green-700">
+                        Apply to Help
+                      </Button>
                     </div>
-                    <p className="text-sm text-gray-600 mb-3">
-                      Skills required: {issue.skillsRequired}
-                    </p>
-                    <Button size="sm" className="w-full bg-green-600 hover:bg-green-700">
-                      Apply to Help
-                    </Button>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </main>

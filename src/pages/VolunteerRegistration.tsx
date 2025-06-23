@@ -5,10 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MapPin, User, Mail, Phone, GraduationCap } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { MapPin, User, Mail, Phone, GraduationCap, Loader2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useVolunteerRegistration } from '@/hooks/useVolunteers';
 
 const VolunteerRegistration = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -20,6 +22,8 @@ const VolunteerRegistration = () => {
     motivation: ''
   });
 
+  const volunteerRegistration = useVolunteerRegistration();
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
@@ -27,11 +31,29 @@ const VolunteerRegistration = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Volunteer registration data:', formData);
-    // Handle form submission
-    alert('Thank you for registering as a volunteer! We will contact you soon.');
+    
+    try {
+      await volunteerRegistration.mutateAsync(formData);
+      // Reset form
+      setFormData({
+        fullName: '',
+        email: '',
+        phone: '',
+        location: '',
+        skills: '',
+        experience: '',
+        availability: '',
+        motivation: ''
+      });
+      // Redirect to dashboard after successful registration
+      setTimeout(() => {
+        navigate('/volunteer-dashboard');
+      }, 2000);
+    } catch (error) {
+      console.error('Registration failed:', error);
+    }
   };
 
   return (
@@ -88,6 +110,7 @@ const VolunteerRegistration = () => {
                         onChange={handleChange}
                         required
                         placeholder="Enter your full name"
+                        disabled={volunteerRegistration.isPending}
                       />
                     </div>
                     <div>
@@ -100,6 +123,7 @@ const VolunteerRegistration = () => {
                         onChange={handleChange}
                         required
                         placeholder="your.email@example.com"
+                        disabled={volunteerRegistration.isPending}
                       />
                     </div>
                   </div>
@@ -114,6 +138,7 @@ const VolunteerRegistration = () => {
                         onChange={handleChange}
                         required
                         placeholder="+91 9876543210"
+                        disabled={volunteerRegistration.isPending}
                       />
                     </div>
                     <div>
@@ -125,6 +150,7 @@ const VolunteerRegistration = () => {
                         onChange={handleChange}
                         required
                         placeholder="City, State"
+                        disabled={volunteerRegistration.isPending}
                       />
                     </div>
                   </div>
@@ -139,6 +165,7 @@ const VolunteerRegistration = () => {
                       required
                       placeholder="e.g., Civil Engineering, Electrical work, Solar installation, Water systems, Project management..."
                       className="min-h-[80px]"
+                      disabled={volunteerRegistration.isPending}
                     />
                   </div>
 
@@ -151,6 +178,7 @@ const VolunteerRegistration = () => {
                       onChange={handleChange}
                       placeholder="Describe any relevant work or volunteer experience..."
                       className="min-h-[80px]"
+                      disabled={volunteerRegistration.isPending}
                     />
                   </div>
 
@@ -162,6 +190,7 @@ const VolunteerRegistration = () => {
                       value={formData.availability}
                       onChange={handleChange}
                       placeholder="e.g., Weekends, 10 hours per week, Full-time..."
+                      disabled={volunteerRegistration.isPending}
                     />
                   </div>
 
@@ -175,11 +204,23 @@ const VolunteerRegistration = () => {
                       required
                       placeholder="Tell us about your motivation to help rural communities..."
                       className="min-h-[100px]"
+                      disabled={volunteerRegistration.isPending}
                     />
                   </div>
 
-                  <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
-                    Register as Volunteer
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-green-600 hover:bg-green-700"
+                    disabled={volunteerRegistration.isPending}
+                  >
+                    {volunteerRegistration.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Registering...
+                      </>
+                    ) : (
+                      'Register as Volunteer'
+                    )}
                   </Button>
                 </form>
               </CardContent>
